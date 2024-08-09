@@ -88,7 +88,7 @@ public class ParallelAutomatonSimulation{
                         }
                     }
                 }
-
+                return change;
                 /*for (int i = loRow+1; i < hiRow - 1; i++) {
                     for (int j = loColumn+1; j < hiColumns - 1; j++) {
                         updateGrid[i][j] = (grid[i][j] % 4) +
@@ -109,9 +109,21 @@ public class ParallelAutomatonSimulation{
                     }
                 }
                 return change;*/
-
             }
-            return change;
+            else{
+                int rowMid = loRow+(hiRow-loRow)/2;
+                int colMid = loColumn+(hiColumns-loColumn)/2;
+
+                AutomatonSimulationThread top = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid+1, loColumn,hiColumns);
+                AutomatonSimulationThread bottom = new AutomatonSimulationThread(grid, updateGrid, rowMid, hiRow, loColumn, hiColumns);
+
+                top.fork();
+
+                boolean topRightResult = bottom.compute();
+                boolean topLeftResult = top.join();
+
+                return topLeftResult || topRightResult;
+            }
         }
     }
 
