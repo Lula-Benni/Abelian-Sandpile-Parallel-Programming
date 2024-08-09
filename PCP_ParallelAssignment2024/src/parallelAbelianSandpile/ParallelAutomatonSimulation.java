@@ -67,7 +67,7 @@ public class ParallelAutomatonSimulation{
         protected Boolean compute() {
             boolean change=false;
             //do not update border
-            if(hiRow-loRow<round((hiColumns)*(0.08))) {
+            if(hiRow-loRow<round((hiColumns)*(0.54))) {
                 for (int i = loRow; i < hiRow-1; i++) {
                     for (int j = loColumn; j < hiColumns-1; j++) {
                         if (grid[i][j] >= 4) {
@@ -141,12 +141,13 @@ public class ParallelAutomatonSimulation{
         int[][] initialGrid = readArrayFromCSV(inputFileName);
         Grid simulationGrid = new Grid(initialGrid);
         int counter=0;
-        tick(); //start timer
+         //start timer
         /*if(DEBUG) {
             System.out.printf("starting config: %d \n",counter);
             simulationGrid.printGrid();
         }*/
         boolean result;
+        tick();
         do {
             /*AutomatonSimulationThread simulationThread = new AutomatonSimulationThread(
                     simulationGrid.getGrid(),
