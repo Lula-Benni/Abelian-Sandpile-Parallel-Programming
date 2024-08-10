@@ -54,6 +54,7 @@ public class ParallelAutomatonSimulation{
         int loRow, hiRow, loColumn, hiColumn;
         int [][] grid;
         int [][] updateGrid;
+        private static final int SEQUENTIAL_CUTOFF = 510;
 
         public AutomatonSimulationThread(int[][] grid, int[][] updateGrid, int loRow, int hiRow, int loColumn, int hiColumn){
             this.grid = grid;
@@ -68,7 +69,7 @@ public class ParallelAutomatonSimulation{
             boolean change=false;
             //do not update border
 
-            if(hiRow-loRow<510){//*round((hiColumns)*(0.54))*//*) {
+            if(hiRow-loRow<SEQUENTIAL_CUTOFF){//*round((hiColumns)*(0.54))*//*) {
                 for (int i = loRow; i < hiRow-1; i++) {
                     for (int j = loColumn; j < hiColumn -1; j++) {
                         if (grid[i][j] >= 4) {
@@ -144,10 +145,10 @@ public class ParallelAutomatonSimulation{
         Grid simulationGrid = new Grid(initialGrid);
         int counter=0;
          //start timer
-        /*if(DEBUG) {
+        if(DEBUG) {
             System.out.printf("starting config: %d \n",counter);
             simulationGrid.printGrid();
-        }*/
+        }
         boolean result;
         tick();
         do {
@@ -163,6 +164,7 @@ public class ParallelAutomatonSimulation{
                     1,simulationGrid.getRows()+2,
                     1,simulationGrid.getColumns()+2
             ));
+            if(DEBUG) simulationGrid.printGrid();
             counter++;
         }
         while(result);// {//run until no change
