@@ -48,5 +48,5 @@ run: all
 	#java -classpath bin $(MAIN_CLASS) $(ARGS)
 	for args in $(ARGS_LIST); do \
 		echo "Running with arguments: $$args"; \
-		java -classpath bin $(MAIN_CLASS) $$args;
+		java -classpath bin $(MAIN_CLASS) $$args; \
 	done
