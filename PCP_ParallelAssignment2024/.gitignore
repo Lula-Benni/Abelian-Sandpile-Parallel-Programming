@@ -1,7 +1,13 @@
 *.class
 
-input/
-
-output/
+.classpath
+.project
 
 bin/
+
+.idea/
+
+.settings/
+
+PCP_ParallelAssignment2024/bin/
+
