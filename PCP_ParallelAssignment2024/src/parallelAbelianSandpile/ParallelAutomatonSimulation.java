@@ -117,8 +117,8 @@ public class ParallelAutomatonSimulation{
                 int rowMid = loRow+(hiRow-loRow)/2;
                 int colMid = loColumn+(hiColumn -loColumn)/2;
 
-                AutomatonSimulationThread top = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid, loColumn, hiColumn);
-                AutomatonSimulationThread bottom = new AutomatonSimulationThread(grid, updateGrid, rowMid-1, hiRow, loColumn, hiColumn);
+                AutomatonSimulationThread top = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid+1, loColumn, hiColumn);
+                AutomatonSimulationThread bottom = new AutomatonSimulationThread(grid, updateGrid, rowMid, hiRow, loColumn, hiColumn);
 
                 top.fork();
 
