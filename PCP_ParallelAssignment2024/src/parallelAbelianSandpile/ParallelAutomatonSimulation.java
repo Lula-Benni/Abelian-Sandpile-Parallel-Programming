@@ -54,7 +54,7 @@ public class ParallelAutomatonSimulation{
         int loRow, hiRow, loColumn, hiColumn;
         int [][] grid;
         int [][] updateGrid;
-        private static final int SEQUENTIAL_CUTOFF = 510;
+        private static final int SEQUENTIAL_CUTOFF = 300;
 
         public AutomatonSimulationThread(int[][] grid, int[][] updateGrid, int loRow, int hiRow, int loColumn, int hiColumn){
             this.grid = grid;
@@ -117,7 +117,7 @@ public class ParallelAutomatonSimulation{
                 int rowMid = loRow+(hiRow-loRow)/2;
                 int colMid = loColumn+(hiColumn -loColumn)/2;
 
-                AutomatonSimulationThread top = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid+1, loColumn, hiColumn);
+                AutomatonSimulationThread top = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid, loColumn, hiColumn);
                 AutomatonSimulationThread bottom = new AutomatonSimulationThread(grid, updateGrid, rowMid, hiRow, loColumn, hiColumn);
 
                 top.fork();
@@ -125,7 +125,22 @@ public class ParallelAutomatonSimulation{
                 boolean topRightResult = bottom.compute();
                 boolean topLeftResult = top.join();
 
-                return topLeftResult || topRightResult;
+                for (int j = loColumn; j < hiColumn - 1; j++) {
+                    int i = rowMid - 1; // The last row of the top region
+                    if (grid[i][j] >= 4) {
+                        updateGrid[i][j] = grid[i][j] / 4;
+                        grid[i][j] %= 4;
+                        if (i > 1) grid[i - 1][j] += updateGrid[i][j]; // Top neighbor
+                        if (i < grid.length - 2) grid[i + 1][j] += updateGrid[i][j]; // Bottom neighbor
+                        if (j > 1) grid[i][j - 1] += updateGrid[i][j]; // Left neighbor
+                        if (j < grid[i].length - 2) grid[i][j + 1] += updateGrid[i][j]; // Right neighbor
+                        if (grid[i][j] != updateGrid[i][j]) {
+                            change = true;
+                        }
+                    }
+                }
+
+                return topLeftResult || topRightResult || change;
             }
         }
     }
