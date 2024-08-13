@@ -54,7 +54,7 @@ public class ParallelAutomatonSimulation{
         int loRow, hiRow, loColumn, hiColumn;
         int [][] grid;
         int [][] updateGrid;
-        private static final int SEQUENTIAL_CUTOFF = 300;
+        private static final int SEQUENTIAL_CUTOFF = 400;
 
         public AutomatonSimulationThread(int[][] grid, int[][] updateGrid, int loRow, int hiRow, int loColumn, int hiColumn){
             this.grid = grid;
