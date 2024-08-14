@@ -54,7 +54,7 @@ public class ParallelAutomatonSimulation{
         private int loRow, hiRow, loColumn, hiColumn;
         private int [][] grid;
         private int [][] updateGrid;
-        private static final int SEQUENTIAL_CUTOFF = 5;
+        private static final int SEQUENTIAL_CUTOFF = 400;
 
         public AutomatonSimulationThread(int[][] grid, int[][] updateGrid, int loRow, int hiRow, int loColumn, int hiColumn){
             this.grid = grid;
@@ -71,19 +71,7 @@ public class ParallelAutomatonSimulation{
 
             if(hiRow-loRow<SEQUENTIAL_CUTOFF){//*round((hiColumns)*(0.54))*//*) {
                 for (int i = loRow; i < hiRow - 1; i++) {
-                    for (int j = loColumn; j < hiColumn - 1; j++) {
-                        // Calculate the new value for each cell
-                        updateGrid[i][j] = (grid[i][j] % 4) +
-                                (grid[i - 1][j] / 4) +
-                                (grid[i + 1][j] / 4) +
-                                (grid[i][j - 1] / 4) +
-                                (grid[i][j + 1] / 4);
-
-                        // Check if the value has changed
-                        if (grid[i][j] != updateGrid[i][j]) {
-                            change = true;
-                        }
-                    }
+                    change = isUpdated(change, i);
                 }
                 return change;
             }
@@ -100,21 +88,26 @@ public class ParallelAutomatonSimulation{
                 boolean leftResult = left.join();
 
                 int i = rowMid-1; // The last row of the left region
-                for (int j = loColumn; j < hiColumn - 1; j++) {
-                    // Calculate the new value for each cell
-                    updateGrid[i][j] = (grid[i][j] % 4) +
-                            (grid[i - 1][j] / 4) +
-                            (grid[i + 1][j] / 4) +
-                            (grid[i][j - 1] / 4) +
-                            (grid[i][j + 1] / 4);
-
-                    // Check if the value has changed
-                    if (grid[i][j] != updateGrid[i][j]) {
-                        change = true;
-                    }
-                }
+                change = isUpdated(change, i);
                 return leftResult || rightResult || change;
             }
+        }
+
+        private boolean isUpdated(boolean change, int i) {
+            for (int j = loColumn; j < hiColumn - 1; j++) {
+                // Calculate the new value for each cell
+                updateGrid[i][j] = (grid[i][j] % 4) +
+                        (grid[i - 1][j] / 4) +
+                        (grid[i + 1][j] / 4) +
+                        (grid[i][j - 1] / 4) +
+                        (grid[i][j + 1] / 4);
+
+                // Check if the value has changed
+                if (grid[i][j] != updateGrid[i][j]) {
+                    change = true;
+                }
+            }
+            return change;
         }
     }
     public static void main(String[] args) throws IOException {
