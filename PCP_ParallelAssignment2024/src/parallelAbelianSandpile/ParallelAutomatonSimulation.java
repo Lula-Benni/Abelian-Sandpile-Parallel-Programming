@@ -51,10 +51,10 @@ public class ParallelAutomatonSimulation{
         return array;
     }
     public static class AutomatonSimulationThread extends RecursiveTask<Boolean>{
-        int loRow, hiRow, loColumn, hiColumn;
-        int [][] grid;
-        int [][] updateGrid;
-        private static final int SEQUENTIAL_CUTOFF = 400;
+        private int loRow, hiRow, loColumn, hiColumn;
+        private int [][] grid;
+        private int [][] updateGrid;
+        private static final int SEQUENTIAL_CUTOFF = 5;
 
         public AutomatonSimulationThread(int[][] grid, int[][] updateGrid, int loRow, int hiRow, int loColumn, int hiColumn){
             this.grid = grid;
@@ -70,81 +70,53 @@ public class ParallelAutomatonSimulation{
             //do not update border
 
             if(hiRow-loRow<SEQUENTIAL_CUTOFF){//*round((hiColumns)*(0.54))*//*) {
-                for (int i = loRow; i < hiRow-1; i++) {
-                    for (int j = loColumn; j < hiColumn -1; j++) {
-                        if (grid[i][j] >= 4) {
-                            updateGrid[i][j] = grid[i][j] / 4;
-                            grid[i][j] %= 4;
-                            if(i>1) grid[i - 1][j] += updateGrid[i][j]; // Top neighbor
-                            //grid[0][j] = 0;
-                            if(i< grid.length-2) grid[i + 1][j] += updateGrid[i][j]; // Bottom neighbor
-                            //grid[hiColumn - 1][j] = 0;
-                            if(j>1) grid[i][j - 1] += updateGrid[i][j]; // Left neighbor
-                            //grid[i][0] = 0;
-                            if(j<grid[i].length-2) grid[i][j + 1] += updateGrid[i][j]; // Right neighbor
-                            //grid[i][hiColumn-1] = 0;
-                            //(black for 0, green for 1, blue for 2 and red for 3)
-                            if (grid[i][j]!=updateGrid[i][j]) {
-                                change=true;
-                            }
+                for (int i = loRow; i < hiRow - 1; i++) {
+                    for (int j = loColumn; j < hiColumn - 1; j++) {
+                        // Calculate the new value for each cell
+                        updateGrid[i][j] = (grid[i][j] % 4) +
+                                (grid[i - 1][j] / 4) +
+                                (grid[i + 1][j] / 4) +
+                                (grid[i][j - 1] / 4) +
+                                (grid[i][j + 1] / 4);
+
+                        // Check if the value has changed
+                        if (grid[i][j] != updateGrid[i][j]) {
+                            change = true;
                         }
                     }
                 }
                 return change;
             }
-                /*for (int i = loRow+1; i < hiRow - 1; i++) {
-                    for (int j = loColumn+1; j < hiColumn - 1; j++) {
-                        updateGrid[i][j] = (grid[i][j] % 4) +
-                                (grid[i - 1][j] / 4) +
-                                grid[i + 1][j] / 4 +
-                                grid[i][j - 1] / 4 +
-                                grid[i][j + 1] / 4;
-                        if (grid[i][j] != updateGrid[i][j]) {
-                            change = true;
-                        }
-                    }
-                } //end nested for
-                if (change) {
-                    for(int i=loRow+1; i<hiRow-1; i++ ) {
-                        for( int j=loColumn+1; j<hiColumn-1; j++ ) {
-                            grid[i][j]=updateGrid[i][j];
-                        }
-                    }
-                }
-                return change;
-            }*/
             else{
                 int rowMid = loRow+(hiRow-loRow)/2;
-                int colMid = loColumn+(hiColumn -loColumn)/2;
+                //int colMid = loColumn+(hiColumn -loColumn)/2;
 
-                AutomatonSimulationThread top = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid, loColumn, hiColumn);
-                AutomatonSimulationThread bottom = new AutomatonSimulationThread(grid, updateGrid, rowMid, hiRow, loColumn, hiColumn);
+                AutomatonSimulationThread left = new AutomatonSimulationThread(grid, updateGrid, loRow, rowMid, loColumn, hiColumn);
+                AutomatonSimulationThread right = new AutomatonSimulationThread(grid, updateGrid, rowMid, hiRow, loColumn, hiColumn);
 
-                top.fork();
+                left.fork();
 
-                boolean topRightResult = bottom.compute();
-                boolean topLeftResult = top.join();
+                boolean rightResult = right.compute();
+                boolean leftResult = left.join();
 
+                int i = rowMid-1; // The last row of the left region
                 for (int j = loColumn; j < hiColumn - 1; j++) {
-                    int i = rowMid - 1; // The last row of the top region
-                    if (grid[i][j] >= 4) {
-                        updateGrid[i][j] = grid[i][j] / 4;
-                        grid[i][j] %= 4;
-                        if (i > 1) grid[i - 1][j] += updateGrid[i][j]; // Top neighbor
-                        if (i < grid.length - 2) grid[i + 1][j] += updateGrid[i][j]; // Bottom neighbor
-                        if (j > 1) grid[i][j - 1] += updateGrid[i][j]; // Left neighbor
-                        if (j < grid[i].length - 2) grid[i][j + 1] += updateGrid[i][j]; // Right neighbor
-                        if (grid[i][j] != updateGrid[i][j]) {
-                            change = true;
-                        }
+                    // Calculate the new value for each cell
+                    updateGrid[i][j] = (grid[i][j] % 4) +
+                            (grid[i - 1][j] / 4) +
+                            (grid[i + 1][j] / 4) +
+                            (grid[i][j - 1] / 4) +
+                            (grid[i][j + 1] / 4);
+
+                    // Check if the value has changed
+                    if (grid[i][j] != updateGrid[i][j]) {
+                        change = true;
                     }
                 }
-
-                return topLeftResult || topRightResult || change;
+                return leftResult || rightResult || change;
             }
         }
     }
-
     public static void main(String[] args) throws IOException {
         final ForkJoinPool fjPool = ForkJoinPool.commonPool();
 
@@ -167,25 +139,23 @@ public class ParallelAutomatonSimulation{
         boolean result;
         tick();
         do {
-            /*AutomatonSimulationThread simulationThread = new AutomatonSimulationThread(
-                    simulationGrid.getGrid(),
-                    simulationGrid.getUpdateGrid(),
-                    0,simulationGrid.getRows()+2,
-                    0,simulationGrid.getColumns()+2
-            );*/
             result = fjPool.invoke(new AutomatonSimulationThread(
                     simulationGrid.getGrid(),
                     simulationGrid.getUpdateGrid(),
                     1,simulationGrid.getRows()+2,
                     1,simulationGrid.getColumns()+2
             ));
+            if (result) {
+                for (int i = 1; i < simulationGrid.getRows()+1; i++) {
+                    for (int j = 1; j < simulationGrid.getColumns()+1; j++) {
+                        simulationGrid.getGrid()[i][j] = simulationGrid.getUpdateGrid()[i][j];
+                    }
+                }
+            }
             if(DEBUG) simulationGrid.printGrid();
             counter++;
         }
         while(result);// {//run until no change
-            //if(DEBUG) simulationGrid.printGrid();
-        //    counter++;
-       // }
         tock();
 
         System.out.println("Simulation complete, writing image...");
